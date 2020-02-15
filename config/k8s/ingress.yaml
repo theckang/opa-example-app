@@ -1,0 +1,12 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: opa-example-app
+spec:
+  rules:
+    - http:
+        paths:
+        - path: /
+          backend:
+            serviceName: opa-example-app
+            servicePort: 8080
