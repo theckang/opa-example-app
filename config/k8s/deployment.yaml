@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: opa-example-app
+  namespace: opa-example-app
   labels:
     app: opa-example-app
 spec:
