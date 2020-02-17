@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1alpha1
 kind: TaskRun
 metadata:
   name: create-ingress-run
-  namespace: getting-started
+  namespace: opa-example-app-trigger
 spec:
   taskRef:
     name: create-ingress
@@ -17,7 +17,7 @@ spec:
     - name: ExternalDomain
       value: triggers.ifontlabs.com
     - name: Service
-      value: el-getting-started-listener
+      value: el-opa-example-app-trigger-listener
     - name: ServicePort
       value: "8080"
   timeout: 1000s

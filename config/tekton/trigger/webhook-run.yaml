@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1alpha1
 kind: TaskRun
 metadata:
   name: create-webhook-run
-  namespace: getting-started
+  namespace: opa-example-app-trigger
 spec:
   taskRef:
     name: create-webhook

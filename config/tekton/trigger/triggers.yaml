@@ -1,8 +1,8 @@
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
-  name: getting-started-triggertemplate
-  namespace: getting-started
+  name: opa-example-app-trigger-triggertemplate
+  namespace: opa-example-app-trigger
 spec:
   params:
     - name: gitrevision
@@ -16,12 +16,12 @@ spec:
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
       metadata:
-        name: getting-started-pipeline-run-$(uid)
+        name: opa-example-app-trigger-pipeline-run-$(uid)
         namespace: $(params.namespace)
       spec:
         serviceAccountName: tekton-triggers-admin
         pipelineRef:
-          name: getting-started-pipeline
+          name: opa-example-app-trigger-pipeline
         resources:
           - name: source-repo
             resourceSpec:
@@ -36,37 +36,37 @@ spec:
               type: image
               params:
                 - name: url
-                  value: quay.io/ifont/opa-example-app # docker-repo-location.com/repo:getting-started
+                  value: quay.io/ifont/opa-example-app # docker-repo-location.com/repo:opa-example-app-trigger
           - name: event-to-sink
             resourceSpec:
               type: cloudEvent
               params:
                 - name: targetURI
-                  value: http://event-display.getting-started.svc.cluster.local
+                  value: http://event-display.opa-example-app-trigger.svc.cluster.local
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
-  name: getting-started-pipelinebinding
-  namespace: getting-started
+  name: opa-example-app-trigger-pipelinebinding
+  namespace: opa-example-app-trigger
 spec:
   params:
     - name: gitrevision
       value: $(body.head_commit.id)
     - name: namespace
-      value: getting-started
+      value: opa-example-app-trigger
     - name: gitrepositoryurl
       value: "https://github.com/$(body.repository.full_name)"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: EventListener
 metadata:
-  name: getting-started-listener
-  namespace: getting-started
+  name: opa-example-app-trigger-listener
+  namespace: opa-example-app-trigger
 spec:
   serviceAccountName: tekton-triggers-admin
   triggers:
     - bindings:
-      - name: getting-started-pipelinebinding
+      - name: opa-example-app-trigger-pipelinebinding
       template:
-        name: getting-started-triggertemplate
+        name: opa-example-app-trigger-triggertemplate
