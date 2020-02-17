@@ -14,9 +14,18 @@ https://github.com/tektoncd/triggers/blob/master/docs/getting-started/README.md#
 
 ```bash
 kubectl create namespace opa-example-app
+kubectl create namespace opa-example-app-trigger
 ```
 
-- Create the secret to access your container registry:
+- Set the namespace for the `current-context`:
+
+```bash
+kubectl config set-context $(kubectl config current-context) --namespace opa-example-app-trigger
+```
+
+- Create the secret to access your container registry. If using Quay, you can
+  create a robot account and provide it the necessary permissions to push to
+  your container registry repo.
 
 ```bash
 kubectl create secret docker-registry regcred \
@@ -26,7 +35,7 @@ kubectl create secret docker-registry regcred \
                     --docker-email=<your-email>
 ```
 
-- Create the admin user, role and rolebinding
+- Create the trigger admin user, role and rolebinding
 
 ```bash
 kubectl apply -f ./config/tekton/trigger/admin-role.yaml
@@ -36,6 +45,13 @@ kubectl apply -f ./config/tekton/trigger/admin-role.yaml
 
 ```bash
 kubectl apply -f ./config/tekton/trigger/webhook-role.yaml
+```
+
+- Create the deploy role and rolebinding in the namespace that will host the
+  opa-example-app:
+
+```bash
+kubectl -n opa-example-app apply -f ./config/tekton/trigger/admin-role.yaml
 ```
 
 ## Install the Pipeline and Trigger
@@ -103,8 +119,9 @@ git commit -a -m "build commit" --allow-empty && git push origin mybranch
 
 ## Cleanup
 
-Delete the `opa-example-app` namespace:
+Delete the namespaces:
 
 ```bash
+kubectl delete namespace opa-example-app-trigger
 kubectl delete namespace opa-example-app
 ```
