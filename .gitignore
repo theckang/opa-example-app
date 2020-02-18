@@ -1,0 +1,4 @@
+config/tekton/tkn-completion.bash
+config/tekton/trigger/quay-secret.yaml
+config/tekton/trigger/github-secret.yaml
+
