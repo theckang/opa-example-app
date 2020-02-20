@@ -4,9 +4,16 @@ OPA Example App
 
 ## Install Dependencies
 
-Before installing the specific trigger, install the tekton piplines and
-triggers
-https://github.com/tektoncd/triggers/blob/master/docs/getting-started/README.md#install-dependencies.
+Before proceeding with this tutorial, you'll need to install the following:
+1. Install the tekton [piplines and
+   triggers](https://github.com/tektoncd/triggers/blob/master/docs/getting-started/README.md#install-dependencies).
+2. If using GCP, follow the [instructions for using the Nginx Ingress
+   Controller](https://github.com/tektoncd/triggers/blob/master/docs/exposing-eventlisteners.md#using-nginx-ingress)
+   pasted here for convenience:
+   ```bash
+   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
+   ```
 
 ## Configure the cluster
 
