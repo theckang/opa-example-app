@@ -5,7 +5,8 @@ metadata:
   namespace: opa-example-app
 spec:
   rules:
-    - http:
+    - host: opa.ifontlabs.com
+      http:
         paths:
         - path: /
           backend:
