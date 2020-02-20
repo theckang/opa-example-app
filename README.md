@@ -116,6 +116,20 @@ Create the webhook task:
 kubectl apply -f ./config/tekton/trigger/webhook-run.yaml
 ```
 
+## Install Tekton Dashboard
+
+Install the TektonCD Dashboard by following these
+[instructions](https://github.com/tektoncd/dashboard#install-dashboard).
+
+Once installed, you can install the following Ingress resources to expose it
+via the same load balancer IP address being used by the other Ingress
+resources. Be sure to modify the host field to provide your own fully qualified
+domain name.
+
+```bash
+kubectl apply -f ./config/tekton/dashboard/ingress.yaml
+```
+
 ## Watch it work!
 
 Commit and push an empty commit to your development repo.
