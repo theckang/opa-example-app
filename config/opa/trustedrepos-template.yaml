@@ -22,30 +22,28 @@ spec:
 
         # For Pods
         violation[{"msg": msg}] {
-          container := input.review.object.spec.containers[_]
-          satisfied := [good | repo = input.parameters.repos[_] ; good = startswith(container.image, repo)]
+          c := containers[_]
+          satisfied := [good | repo = input.parameters.repos[_] ; good = startswith(c.image, repo)]
           not any(satisfied)
-          msg := sprintf("container <%v> has an invalid image repo <%v>, allowed repos are %v", [container.name, container.image, input.parameters.repos])
+          msg := sprintf("container <%v> has an invalid image repo <%v>, allowed repos are %v", [c.name, c.image, input.parameters.repos])
         }
 
-        violation[{"msg": msg}] {
-          container := input.review.object.spec.initContainers[_]
-          satisfied := [good | repo = input.parameters.repos[_] ; good = startswith(container.image, repo)]
-          not any(satisfied)
-          msg := sprintf("container <%v> has an invalid image repo <%v>, allowed repos are %v", [container.name, container.image, input.parameters.repos])
+        # For Pod Containers
+        containers[c] {
+          c := input.review.object.spec.containers[_]
         }
 
-        # For Templated Pods
-        violation[{"msg": msg}] {
-          container := input.review.object.spec.template.spec.containers[_]
-          satisfied := [good | repo = input.parameters.repos[_] ; good = startswith(container.image, repo)]
-          not any(satisfied)
-          msg := sprintf("container <%v> has an invalid image repo <%v>, allowed repos are %v", [container.name, container.image, input.parameters.repos])
+        # For Pod InitContainers
+        containers[c] {
+          c := input.review.object.spec.initContainers[_]
         }
 
-        violation[{"msg": msg}] {
-          container := input.review.object.spec.template.spec.initContainers[_]
-          satisfied := [good | repo = input.parameters.repos[_] ; good = startswith(container.image, repo)]
-          not any(satisfied)
-          msg := sprintf("container <%v> has an invalid image repo <%v>, allowed repos are %v", [container.name, container.image, input.parameters.repos])
+        # For Templated Pod Containers
+        containers[c] {
+          c := input.review.object.spec.template.spec.containers[_]
+        }
+
+        # For Templated Pod InitContainers
+        containers[c] {
+          c := input.review.object.spec.template.spec.initContainers[_]
         }
