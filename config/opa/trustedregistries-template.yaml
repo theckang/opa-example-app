@@ -1,31 +1,31 @@
 apiVersion: templates.gatekeeper.sh/v1beta1
 kind: ConstraintTemplate
 metadata:
-  name: k8strustedrepos
+  name: k8strustedregistries
 spec:
   crd:
     spec:
       names:
-        kind: K8sTrustedRepos
+        kind: K8sTrustedRegistries
       validation:
         # Schema for the `parameters` field
         openAPIV3Schema:
           properties:
-            repos:
+            registries:
               type: array
               items:
                 type: string
   targets:
     - target: admission.k8s.gatekeeper.sh
       rego: |
-        package k8strustedrepos
+        package k8strustedregistries
 
         # For Pods
         violation[{"msg": msg}] {
           c := containers[_]
-          satisfied := [good | repo = input.parameters.repos[_] ; good = startswith(c.image, repo)]
+          satisfied := [good | registry = input.parameters.registries[_] ; good = startswith(c.image, registry)]
           not any(satisfied)
-          msg := sprintf("container <%v> has an invalid image repo <%v>, allowed repos are %v", [c.name, c.image, input.parameters.repos])
+          msg := sprintf("container <%v> has an invalid image registry <%v>, allowed registries are %v", [c.name, c.image, input.parameters.registries])
         }
 
         # For Pod Containers

@@ -1,7 +1,7 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sTrustedRepos
+kind: K8sTrustedRegistries
 metadata:
-  name: trusted-repos
+  name: trusted-registries
 spec:
   match:
     kinds:
@@ -12,5 +12,5 @@ spec:
     namespaces:
       - "opa-example-app"
   parameters:
-    repos:
+    registries:
       - "quay.io"
