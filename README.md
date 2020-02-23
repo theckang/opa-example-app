@@ -28,6 +28,7 @@ Before proceeding with this tutorial, you'll need to install the following:
    ```
 4. Install OPA Gatekeeper by following these
    [instructions](https://github.com/open-policy-agent/gatekeeper#installation).
+   This tutorial was constructed using OPA Gatekeeper `v3.1.0-beta.7`.
 
 ## Fork This Repository
 
@@ -191,9 +192,8 @@ prevention mechanisms earlier in the develoment lifecycle.
 
 In order to that, we'll use a tool called
 [`conftest`](https://github.com/instrumenta/conftest). It is a tool that
-facilitates applying testing your configuration files against OPA. In our case,
-we want to test the trusted registries Rego policy against our
-`deployment.yaml` file.
+facilitates testing your configuration files against OPA. In our case, we want
+to test the trusted registries Rego policy against our `deployment.yaml` file.
 
 We can leverage git `pre-commit` hooks in order to do that by creating a
 symbolic link to the git `pre-commit` hook script:
