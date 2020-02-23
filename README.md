@@ -7,8 +7,11 @@ OPA Example App
 Before proceeding with this tutorial, you'll need to install the following:
 1. Install the tekton [piplines and
    triggers](https://github.com/tektoncd/triggers/blob/master/docs/getting-started/README.md#install-dependencies).
+   This tutorial was constructed using pipelines `v0.10.1` and triggers
+   `v0.2.1`.
 2. Install the TektonCD Dashboard by following these
    [instructions](https://github.com/tektoncd/dashboard#install-dashboard).
+   This tutorial was constructed using dashboard `v0.5.2`.
    Once installed, you can install the following Ingress resources to expose it
    via the same load balancer IP address being used by the other Ingress
    resources. Be sure to modify the host field to provide your own fully
