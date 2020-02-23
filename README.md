@@ -23,6 +23,8 @@ Before proceeding with this tutorial, you'll need to install the following:
    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
    ```
+4. Install OPA Gatekeeper by following these
+   [instructions](https://github.com/open-policy-agent/gatekeeper#installation).
 
 ## Fork This Repository
 
@@ -148,19 +150,70 @@ Then Create the webhook task:
 kubectl apply -f ./config/tekton/trigger/webhook-run.yaml
 ```
 
-## Watch it work!
+## Watch the Trigger and Pipeline Work!
 
-Commit and push an empty commit to your development repo.
+Commit and push an amended commit to your development repo.
 
 ```bash
-git commit -a -m "build commit" --allow-empty && git push origin mybranch
+git commit --amend -a -m "build commit" && git push origin mybranch
 ```
+
+## Install OPA Gatekeeper ConstraintTemplate and Constraint
+
+First we'll install the `ConstraintTemplate` and `K8sTrustedRegistries`
+constraint to prevent untrusted registries from being used.
+
+```bash
+kubectl apply -f ./config/opa/trustedregistries-template.yaml
+kubectl apply -f ./config/opa/trustedregistries.yaml
+```
+
+## Update Deployment Image Registry
+
+In order to exercise the OPA policy, we'll need to attempt to use an untrusted
+registry:
+
+```bash
+sed -i s/quay.io/gcr.io/ ./config/k8s/deployment.yaml
+```
+
+Commit and push the changes to watch OPA prevent the deployment.
+
+## Giving Developers Feedback Sooner
+
+Wouldn't it be great if developers didn't have to wait for the entire CI/CD
+pipeline to complete only to realize the operation they want to perform isn't
+allowed? To give developers feedback sooner, we need to move the policy
+prevention mechanisms earlier in the develoment lifecycle.
+
+In order to that, we'll use a tool called
+[`conftest`](https://github.com/instrumenta/conftest). It is a tool that
+facilitates applying testing your configuration files against OPA. In our case,
+we want to test the trusted registries Rego policy against our
+`deployment.yaml` file.
+
+We can leverage git `pre-commit` hooks in order to do that by creating a
+symbolic link to the git `pre-commit` hook script:
+
+```bash
+ln -rs hooks/pre-commit.sh .git/hooks/pre-commit
+```
+
+Now revert the previous `gcr.io` registry change and then attempt to use an
+untrusted registry again:
+
+```bash
+sed -i s/quay.io/gcr.io/ ./config/k8s/deployment.yaml
+```
+
+Attempt to commit and you will receive the same error immediately instead of
+waiting for the CI/CD pipeline to complete!
 
 ## Cleanup
 
 Delete the namespaces:
 
 ```bash
-kubectl delete namespace opa-example-app-trigger
 kubectl delete namespace opa-example-app
+kubectl delete namespace opa-example-app-trigger
 ```
