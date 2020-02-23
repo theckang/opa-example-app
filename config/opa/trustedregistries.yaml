@@ -3,6 +3,7 @@ kind: K8sTrustedRegistries
 metadata:
   name: trusted-registries
 spec:
+  enforcementAction: deny
   match:
     kinds:
       - apiGroups: [""]
