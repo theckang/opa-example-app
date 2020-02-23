@@ -56,7 +56,7 @@ kubectl create secret docker-registry regcred \
                     --docker-email=<your-email>
 ```
 
-- Create the trigger admin user, role and rolebinding
+- Create the trigger admin service account, role and rolebinding
 
 ```bash
 kubectl apply -f ./config/tekton/trigger/admin-role.yaml
@@ -68,11 +68,11 @@ kubectl apply -f ./config/tekton/trigger/admin-role.yaml
 kubectl apply -f ./config/tekton/trigger/webhook-role.yaml
 ```
 
-- Create the deploy role and rolebinding in the namespace that will host the
-  opa-example-app:
+- Create the app deploy role and rolebinding in the namespace that will host
+  the opa-example-app:
 
 ```bash
-kubectl -n opa-example-app apply -f ./config/tekton/trigger/admin-role.yaml
+kubectl -n opa-example-app apply -f ./config/tekton/trigger/app-role.yaml
 ```
 
 ## Install the Pipeline and Trigger
