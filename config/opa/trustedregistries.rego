@@ -1,7 +1,7 @@
 package main
 
 trustedRegistries := [
-    {"name": "quay.io"}
+    {"name": "quay.io"},
 ]
 
 deny[msg] {
