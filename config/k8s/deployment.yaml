@@ -18,7 +18,6 @@ spec:
       containers:
         - name: opa-example-app
           image: quay.io/ifont/opa-example-app:latest
-          #image: quay.io/ifont/opa-example-app:v0.0.1
           ports:
             - containerPort: 8080
           imagePullPolicy: Always
