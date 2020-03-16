@@ -49,7 +49,7 @@ spec:
       openssl rsa -in /var/tmp/work/ingress/key.pem -out /var/tmp/work/ingress/key.pem -passin pass:$(inputs.params.CertificateKeyPassphrase)
       EOF
   - name: create-certificate-secret
-    image: lachlanevenson/k8s-oc:latest
+    image: quay.io/openshift/origin-cli:4.3
     volumeMounts:
     - name: work
       mountPath: /var/tmp/work
@@ -67,7 +67,7 @@ spec:
       oc create secret tls $(inputs.params.CertificateSecretName) --cert=/var/tmp/work/ingress/certificate.pem --key=/var/tmp/work/ingress/key.pem || true
       EOF
   - name: create-ingress
-    image: lachlanevenson/k8s-oc:latest
+    image: quay.io/openshift/origin-cli:4.3
     command:
     - sh
     args:

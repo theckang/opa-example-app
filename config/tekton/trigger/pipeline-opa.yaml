@@ -89,7 +89,7 @@ spec:
       type: cloudEvent
   steps:
     - name: run-oc
-      image: lachlanevenson/k8s-oc
+      image: quay.io/openshift/origin-cli:4.3
       command: ["oc"]
       args:
         - "apply"
@@ -117,7 +117,7 @@ spec:
       type: cloudEvent
   steps:
     - name: run-oc
-      image: lachlanevenson/k8s-oc
+      image: quay.io/openshift/origin-cli:4.3
       command: ["oc"]
       args:
         - "replace"
