@@ -49,7 +49,7 @@ spec:
       openssl rsa -in /var/tmp/work/ingress/key.pem -out /var/tmp/work/ingress/key.pem -passin pass:$(inputs.params.CertificateKeyPassphrase)
       EOF
   - name: create-certificate-secret
-    image: lachlanevenson/k8s-kubectl:latest
+    image: lachlanevenson/k8s-oc:latest
     volumeMounts:
     - name: work
       mountPath: /var/tmp/work
@@ -64,10 +64,10 @@ spec:
       if [ $(inputs.params.CreateCertificate) = "false" ];then
         exit 0
       fi
-      kubectl create secret tls $(inputs.params.CertificateSecretName) --cert=/var/tmp/work/ingress/certificate.pem --key=/var/tmp/work/ingress/key.pem || true
+      oc create secret tls $(inputs.params.CertificateSecretName) --cert=/var/tmp/work/ingress/certificate.pem --key=/var/tmp/work/ingress/key.pem || true
       EOF
   - name: create-ingress
-    image: lachlanevenson/k8s-kubectl:latest
+    image: lachlanevenson/k8s-oc:latest
     command:
     - sh
     args:
@@ -75,7 +75,7 @@ spec:
     - |
       set -e
       if [ -n "$(inputs.params.ServiceUID)" ];then
-        cat <<EOF | kubectl create -f - || true
+        cat <<EOF | oc create -f - || true
         apiVersion: extensions/v1beta1
         kind: Ingress
         metadata:
@@ -99,7 +99,7 @@ spec:
                   servicePort: $(inputs.params.ServicePort)
       EOF
       else
-        cat <<EOF | kubectl create -f - || true
+        cat <<EOF | oc create -f - || true
         apiVersion: extensions/v1beta1
         kind: Ingress
         metadata:

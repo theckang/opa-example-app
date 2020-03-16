@@ -26,7 +26,7 @@ spec:
             resource: web-image
     - name: deploy-app
       taskRef:
-        name: deploy-using-kubectl
+        name: deploy-using-oc
       resources:
         inputs:
           - name: source
@@ -44,7 +44,7 @@ spec:
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  name: deploy-using-kubectl
+  name: deploy-using-oc
 spec:
   inputs:
     resources:
@@ -70,9 +70,9 @@ spec:
         - "$(inputs.params.path)"
         - "$(inputs.params.yamlPathToImage)"
         - "$(inputs.resources.image.url)"
-    - name: run-kubectl
-      image: lachlanevenson/k8s-kubectl
-      command: ["kubectl"]
+    - name: run-oc
+      image: lachlanevenson/k8s-oc
+      command: ["oc"]
       args:
         - "apply"
         - "-f"

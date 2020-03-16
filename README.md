@@ -17,14 +17,14 @@ Before proceeding with this tutorial, you'll need to install the following:
    resources. Be sure to modify the host field to provide your own fully
    qualified domain name.
    ```bash
-   kubectl apply -f ./config/tekton/dashboard/ingress.yaml
+   oc apply -f ./config/tekton/dashboard/ingress.yaml
    ```
 1. If using GCP, follow the [instructions for using the Nginx Ingress
    Controller](https://github.com/tektoncd/triggers/blob/master/docs/exposing-eventlisteners.md#using-nginx-ingress)
    pasted here for convenience:
    ```bash
-   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
-   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
+   oc apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
+   oc apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
    ```
 1. Install OPA Gatekeeper by following these
    [instructions](https://github.com/open-policy-agent/gatekeeper#installation).
@@ -41,14 +41,14 @@ you can commit and push changes to trigger builds.
 - Create the Namespace where the resoures will live:
 
 ```bash
-kubectl create namespace opa-example-app
-kubectl create namespace opa-example-app-trigger
+oc create namespace opa-example-app
+oc create namespace opa-example-app-trigger
 ```
 
 - Set the namespace for the `current-context`:
 
 ```bash
-kubectl config set-context $(kubectl config current-context) --namespace opa-example-app-trigger
+oc config set-context $(oc config current-context) --namespace opa-example-app-trigger
 ```
 
 - Create the secret to access your container registry. If using Quay, you can
@@ -56,7 +56,7 @@ kubectl config set-context $(kubectl config current-context) --namespace opa-exa
   your container registry repo.
 
 ```bash
-kubectl create secret docker-registry regcred \
+oc create secret docker-registry regcred \
                     --docker-server=<your-registry-server> \
                     --docker-username=<your-name> \
                     --docker-password=<your-pword> \
@@ -66,20 +66,20 @@ kubectl create secret docker-registry regcred \
 - Create the trigger admin service account, role and rolebinding
 
 ```bash
-kubectl apply -f ./config/tekton/trigger/admin-role.yaml
+oc apply -f ./config/tekton/trigger/admin-role.yaml
 ```
 
 - Create the webhook user, role and rolebinding
 
 ```bash
-kubectl apply -f ./config/tekton/trigger/webhook-role.yaml
+oc apply -f ./config/tekton/trigger/webhook-role.yaml
 ```
 
 - Create the app deploy role and rolebinding in the namespace that will host
   the opa-example-app:
 
 ```bash
-kubectl -n opa-example-app apply -f ./config/tekton/trigger/app-role.yaml
+oc -n opa-example-app apply -f ./config/tekton/trigger/app-role.yaml
 ```
 
 ## Install the Pipeline and Trigger
@@ -90,7 +90,7 @@ Be sure to replace the `targetPath` for the `go test` `Condition` according to
 your github repo source code. Then run:
 
 ```bash
-kubectl apply -f ./config/tekton/trigger/pipeline.yaml
+oc apply -f ./config/tekton/trigger/pipeline.yaml
 ```
 
 ### Install the TriggerTemplate, TriggerBinding and EventListener
@@ -100,14 +100,14 @@ the respective container registry and repository to use for pushing the built
 image. Then run:
 
 ```bash
-kubectl apply -f ./config/tekton/trigger/triggers.yaml
+oc apply -f ./config/tekton/trigger/triggers.yaml
 ```
 
 ## Add Ingress and GitHub-Webhook Tasks
 
 ```bash
-kubectl apply -f ./config/tekton/trigger/create-ingress.yaml
-kubectl apply -f ./config/tekton/trigger/create-webhook.yaml
+oc apply -f ./config/tekton/trigger/create-ingress.yaml
+oc apply -f ./config/tekton/trigger/create-webhook.yaml
 ```
 
 ## Run Ingress Task
@@ -118,7 +118,7 @@ order to pass the relevent GitHub commit details to the `EventListener` service
 running in your cluster. Then run:
 
 ```bash
-kubectl apply -f ./config/tekton/trigger/ingress-run.yaml
+oc apply -f ./config/tekton/trigger/ingress-run.yaml
 ```
 
 ## Run GitHub Webhook Task
@@ -152,7 +152,7 @@ Next you'll want to edit the `webhook-run.yaml` file:
 Then Create the webhook task:
 
 ```bash
-kubectl apply -f ./config/tekton/trigger/webhook-run.yaml
+oc apply -f ./config/tekton/trigger/webhook-run.yaml
 ```
 
 ## Watch the Trigger and Pipeline Work!
@@ -169,8 +169,8 @@ First we'll install the `ConstraintTemplate` and `K8sTrustedRegistries`
 constraint to prevent untrusted registries from being used.
 
 ```bash
-kubectl apply -f ./config/opa/trustedregistries-template.yaml
-kubectl apply -f ./config/opa/trustedregistries.yaml
+oc apply -f ./config/opa/trustedregistries-template.yaml
+oc apply -f ./config/opa/trustedregistries.yaml
 ```
 
 ## Update Deployment Image Registry
@@ -194,14 +194,14 @@ prevention mechanisms earlier in the develoment lifecycle.
 ### Add Early Step to Pipeline
 
 One way to achieve this, is to add an initial step in the pipeline that
-attempts to perform the `kubectl apply` operations with the `--server-dry-run`
+attempts to perform the `oc apply` operations with the `--server-dry-run`
 flag so that we can get feedback sooner on whether the policy prevents this
 operation. To do this, let's add a task and update the pipeline steps to
 include a dry run step prior to anything else being run in the pipeline. Go
 ahead and apply these changes:
 
 ```bash
-kubectl apply -f ./config/tekton/trigger/pipeline-opa.yaml
+oc apply -f ./config/tekton/trigger/pipeline-opa.yaml
 ```
 
 Commit and push an empty commit to your development repo.
@@ -244,6 +244,6 @@ waiting for the CI/CD pipeline to complete!
 Delete the namespaces:
 
 ```bash
-kubectl delete namespace opa-example-app
-kubectl delete namespace opa-example-app-trigger
+oc delete namespace opa-example-app
+oc delete namespace opa-example-app-trigger
 ```

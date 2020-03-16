@@ -88,9 +88,9 @@ spec:
     - name: event-to-sink
       type: cloudEvent
   steps:
-    - name: run-kubectl
-      image: lachlanevenson/k8s-kubectl
-      command: ["kubectl"]
+    - name: run-oc
+      image: lachlanevenson/k8s-oc
+      command: ["oc"]
       args:
         - "apply"
         - "-f"
@@ -116,9 +116,9 @@ spec:
     - name: event-to-sink
       type: cloudEvent
   steps:
-    - name: run-kubectl
-      image: lachlanevenson/k8s-kubectl
-      command: ["kubectl"]
+    - name: run-oc
+      image: lachlanevenson/k8s-oc
+      command: ["oc"]
       args:
         - "replace"
         - "--force"
