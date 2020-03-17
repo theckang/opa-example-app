@@ -4,31 +4,21 @@ OPA Example App
 
 ## Install Dependencies
 
-Before proceeding with this tutorial, you'll need to install the following:
-1. Install the tekton [piplines and
-   triggers](https://github.com/tektoncd/triggers/blob/master/docs/getting-started/README.md#install-dependencies).
-   This tutorial was constructed using pipelines `v0.10.1` and triggers
-   `v0.2.1`.
-1. Install the TektonCD Dashboard by following these
-   [instructions](https://github.com/tektoncd/dashboard#install-dashboard).
-   This tutorial was constructed using dashboard `v0.5.2`.
-   Once installed, you can install the following Ingress resources to expose it
-   via the same load balancer IP address being used by the other Ingress
-   resources. Be sure to modify the host field to provide your own fully
-   qualified domain name.
-   ```bash
-   oc apply -f ./config/tekton/dashboard/ingress.yaml
-   ```
-1. If using GCP, follow the [instructions for using the Nginx Ingress
-   Controller](https://github.com/tektoncd/triggers/blob/master/docs/exposing-eventlisteners.md#using-nginx-ingress)
-   pasted here for convenience:
-   ```bash
-   oc apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml
-   oc apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/cloud-generic.yaml
-   ```
+Before proceeding with this tutorial, you'll need to install OpenShift
+Pipelines by installing the OpenShift Pipelines Operator:
+1. You can view the instructions to install the OpenShift Pipelines Operator
+   [here](https://github.com/openshift/tektoncd-pipeline-operator) or if you
+   have an OpenShift cluster running, navigate to the Operators drop-down menu
+   on the left and click on "OperatorHub". Then search for OpenShift Pipelines
+   Operator and install it.
 1. Install OPA Gatekeeper by following these
    [instructions](https://github.com/open-policy-agent/gatekeeper#installation).
-   This tutorial was constructed using OPA Gatekeeper `v3.1.0-beta.7`.
+   This tutorial was constructed using OPA Gatekeeper `v3.1.0-beta.7`. Once
+   installed, make sure to add the `anyuid` security context constraint to the
+   `gatekeeper-admin` service account by running:
+   ```bash
+   oc adm policy add-scc-to-user anyuid -z gatekeeper-admin
+   ```
 1. Install [podman](https://podman.io/).
 
 ## Fork This Repository
@@ -48,7 +38,7 @@ oc create namespace opa-example-app-trigger
 - Set the namespace for the `current-context`:
 
 ```bash
-oc config set-context $(oc config current-context) --namespace opa-example-app-trigger
+oc project opa-example-app-trigger
 ```
 
 - Create the secret to access your container registry. If using Quay, you can
