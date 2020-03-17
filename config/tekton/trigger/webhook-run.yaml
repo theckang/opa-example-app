@@ -21,6 +21,6 @@ spec:
     - name: GitHubSecretStringKey
       value: secret
     - name: ExternalDomain
-      value: triggers.ifontlabs.com
+      value: triggers.apps.ocp.ifontlabs.com # Modify to use your FQDN e.g. triggers.apps.<clustername>.<domain>
   timeout: 1000s
   serviceAccountName: tekton-triggers-createwebhook

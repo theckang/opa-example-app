@@ -76,7 +76,7 @@ spec:
       set -e
       if [ -n "$(inputs.params.ServiceUID)" ];then
         cat <<EOF | oc create -f - || true
-        apiVersion: extensions/v1beta1
+        apiVersion: networking.k8s.io/v1beta1
         kind: Ingress
         metadata:
           name: $(inputs.params.Service)
@@ -100,7 +100,7 @@ spec:
       EOF
       else
         cat <<EOF | oc create -f - || true
-        apiVersion: extensions/v1beta1
+        apiVersion: networking.k8s.io/v1beta1
         kind: Ingress
         metadata:
           name: $(inputs.params.Service)
