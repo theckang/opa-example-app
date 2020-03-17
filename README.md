@@ -169,7 +169,7 @@ In order to exercise the OPA policy, we'll need to attempt to use an untrusted
 registry:
 
 ```bash
-sed -i s/quay.io/gcr.io/ ./config/k8s/deployment.yaml
+sed -i s/quay.io/gcr.io/ ./config/ocp/deployment.yaml
 ```
 
 Commit and push the changes to watch OPA prevent the deployment.
@@ -223,7 +223,7 @@ Now revert the previous `gcr.io` registry change and then attempt to use an
 untrusted registry again:
 
 ```bash
-sed -i s/quay.io/gcr.io/ ./config/k8s/deployment.yaml
+sed -i s/quay.io/gcr.io/ ./config/ocp/deployment.yaml
 ```
 
 Attempt to commit and you will receive the same error immediately instead of

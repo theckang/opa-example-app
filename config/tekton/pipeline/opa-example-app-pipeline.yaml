@@ -37,7 +37,7 @@ spec:
               - build-opa-example-app
       params:
         - name: path
-          value: /workspace/source/config/k8s/deployment.yaml #configure: may change according to your source
+          value: /workspace/source/config/ocp/deployment.yaml #configure: may change according to your source
         - name: yamlPathToImage
           value: "spec.template.spec.containers[0].image"
 ---

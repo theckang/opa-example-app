@@ -51,7 +51,7 @@ spec:
             resource: event-to-sink
       params:
         - name: path
-          value: /workspace/source/config/k8s/ #configure: may change according to your source
+          value: /workspace/source/config/ocp/ #configure: may change according to your source
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Task

@@ -7,7 +7,7 @@
 #
 # To enable this hook, rename this file to "pre-commit".
 
-DEPLOYMENT_CONFIG="${DEPLOYMENT_CONFIG:-config/k8s/deployment.yaml}"
+DEPLOYMENT_CONFIG="${DEPLOYMENT_CONFIG:-config/ocp/deployment.yaml}"
 REGO_POLICY="${REGO_POLICY:-config/opa/trustedregistries.rego}"
 
 print-error-and-exit() {
