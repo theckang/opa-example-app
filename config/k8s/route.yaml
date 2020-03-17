@@ -1,0 +1,12 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: opa-example-app
+  namespace: opa-example-app
+spec:
+  host: opa.apps.ocp.ifontlabs.com # Modify to use your FQDN e.g. opa.apps.<clustername>.<domain>
+  port:
+    targetPort: 8080
+  to:
+    kind: Service
+    name: opa-example-app
