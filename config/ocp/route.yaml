@@ -4,7 +4,7 @@ metadata:
   name: opa-example-app
   namespace: opa-example-app
 spec:
-  host: opa.apps.ocp.ifontlabs.com # Modify to use your FQDN e.g. opa.apps.<clustername>.<domain>
+  host: opa.apps.ocp.ifontlabs.com # Modify to use your FQDN e.g. opa.apps.<clustername>.<domain>. Requires role with `routes/custom-host` resource.
   port:
     targetPort: 8080
   to:
