@@ -5,7 +5,7 @@ metadata:
   namespace: opa-example-app
 spec:
   rules:
-    - host: opa.ifontlabs.com
+    - host: opa.apps.ocp.ifontlabs.com # Modify to use your FQDN e.g. opa.apps.<clustername>.<domain>
       http:
         paths:
         - path: /
