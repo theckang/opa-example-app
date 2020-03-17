@@ -21,21 +21,22 @@ spec:
   tasks:
     - name: build-and-push-image
       taskRef:
-        name: build-and-push-image
+        name: s2i-go
+        kind: ClusterTask
       conditions:
       - conditionRef: "go-test"
         resources:
           - name: source-repo
             resource: source-repo
       params:
-        - name: pathToContext
-          value: /workspace/source-repo
+        - name: PATH_CONTEXT
+          value: /workspace/source
       resources:
         inputs:
-          - name: source-repo
+          - name: source
             resource: source-repo
         outputs:
-          - name: builtImage
+          - name: image
             resource: image-source
     - name: deploy-locally
       taskRef:
@@ -80,39 +81,6 @@ spec:
         - "--force"
         - "-f"
         - "$(inputs.params.path)"
----
-apiVersion: tekton.dev/v1alpha1
-kind: Task
-metadata:
-  name: build-and-push-image
-  namespace: opa-example-app-trigger
-spec:
-  inputs:
-    resources:
-      - name: source-repo
-        type: git
-    params:
-      - name: pathToContext
-        description:
-          The build directory used by Kaniko
-        default: /workspace/source-repo
-  outputs:
-    resources:
-      - name: builtImage
-        type: image
-  steps:
-    - name: build-and-push
-      image: gcr.io/kaniko-project/executor:v0.15.0
-      # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
-      env:
-        - name: "DOCKER_CONFIG"
-          value: "/tekton/home/.docker/"
-      command:
-        - /kaniko/executor
-      args:
-        - --dockerfile=$(inputs.params.pathToContext)/Dockerfile
-        - --destination=$(outputs.resources.builtImage.url)
-        - --context=$(inputs.params.pathToContext)
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Condition
