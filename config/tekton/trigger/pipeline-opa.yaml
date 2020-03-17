@@ -44,14 +44,14 @@ spec:
           - name: source-repo
             resource: source-repo
       params:
-        - name: pathToContext
-          value: /workspace/source-repo
+        - name: PATH_CONTEXT
+          value: /workspace/source
       resources:
         inputs:
-          - name: source-repo
+          - name: source
             resource: source-repo
         outputs:
-          - name: builtImage
+          - name: image
             resource: image-source
     - name: deploy-locally
       taskRef:
@@ -133,30 +133,58 @@ metadata:
 spec:
   inputs:
     resources:
-      - name: source-repo
+      - name: source
         type: git
     params:
-      - name: pathToContext
-        description:
-          The build directory used by Kaniko
-        default: /workspace/source-repo
+      - default: .
+        description: The location of the path to run s2i from.
+        name: PATH_CONTEXT
+        type: string
+      - default: 'true'
+        description: >-
+          Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+          registry)
+        name: TLSVERIFY
+        type: string
   outputs:
     resources:
-      - name: builtImage
+      - name: image
         type: image
   steps:
-    - name: build-and-push
-      image: gcr.io/kaniko-project/executor:v0.15.0
-      # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
-      env:
-        - name: "DOCKER_CONFIG"
-          value: "/tekton/home/.docker/"
+    - name: build
+      image: quay.io/buildah/stable
       command:
-        - /kaniko/executor
-      args:
-        - --dockerfile=$(inputs.params.pathToContext)/Dockerfile
-        - --destination=$(outputs.resources.builtImage.url)
-        - --context=$(inputs.params.pathToContext)
+        - buildah
+        - bud
+        - '--tls-verify=$(inputs.params.TLSVERIFY)'
+        - '--layers'
+        - '-f'
+        - $(inputs.params.PATH_CONTEXT)/Dockerfile
+        - '-t'
+        - $(outputs.resources.image.url)
+        - .
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - mountPath: /var/lib/containers
+          name: varlibcontainers
+      workingDir: /workspace/source
+    - name: push
+      image: quay.io/buildah/stable
+      command:
+        - buildah
+        - push
+        - '--tls-verify=$(inputs.params.TLSVERIFY)'
+        - $(outputs.resources.image.url)
+        - 'docker://$(outputs.resources.image.url)'
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - mountPath: /var/lib/containers
+          name: varlibcontainers
+  volumes:
+    - emptyDir: {}
+      name: varlibcontainers
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Condition
@@ -167,9 +195,8 @@ spec:
   resources:
     - name: source-repo
       type: git
-      targetPath: go/src/github.com/ifont/opa-example-app
   check:
-    image: golang
+    image: registry.access.redhat.com/ubi8/go-toolset
     command: ["go"]
     args: ["test", "./..."]
     workingDir: $(inputs.resources.source-repo.path)

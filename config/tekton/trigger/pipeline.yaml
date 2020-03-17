@@ -21,8 +21,7 @@ spec:
   tasks:
     - name: build-and-push-image
       taskRef:
-        name: s2i-go
-        kind: ClusterTask
+        name: build-and-push-image
       conditions:
       - conditionRef: "go-test"
         resources:
@@ -53,6 +52,67 @@ spec:
       params:
         - name: path
           value: /workspace/source/config/k8s/ #configure: may change according to your source
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: build-and-push-image
+  namespace: opa-example-app-trigger
+spec:
+  inputs:
+    resources:
+      - name: source
+        type: git
+    params:
+      - default: .
+        description: The location of the path to run s2i from.
+        name: PATH_CONTEXT
+        type: string
+      - default: 'true'
+        description: >-
+          Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+          registry)
+        name: TLSVERIFY
+        type: string
+  outputs:
+    resources:
+      - name: image
+        type: image
+  steps:
+    - name: build
+      image: quay.io/buildah/stable
+      command:
+        - buildah
+        - bud
+        - '--tls-verify=$(inputs.params.TLSVERIFY)'
+        - '--layers'
+        - '-f'
+        - $(inputs.params.PATH_CONTEXT)/Dockerfile
+        - '-t'
+        - $(outputs.resources.image.url)
+        - .
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - mountPath: /var/lib/containers
+          name: varlibcontainers
+      workingDir: /workspace/source
+    - name: push
+      image: quay.io/buildah/stable
+      command:
+        - buildah
+        - push
+        - '--tls-verify=$(inputs.params.TLSVERIFY)'
+        - $(outputs.resources.image.url)
+        - 'docker://$(outputs.resources.image.url)'
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - mountPath: /var/lib/containers
+          name: varlibcontainers
+  volumes:
+    - emptyDir: {}
+      name: varlibcontainers
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Task
