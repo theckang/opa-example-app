@@ -54,6 +54,26 @@ spec:
           value: /workspace/source/config/ocp/ #configure: may change according to your source
 ---
 apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: image-source
+spec:
+  type: image
+  params:
+  - name: url
+    value: quay.io/ifont/opa-example-app # registry/account/repo:tag
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: event-to-sink
+spec:
+  type: cloudEvent
+  params:
+    - name: targetURI
+      value: http://event-display.opa-example-app-trigger.svc.cluster.local
+---
+apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
   name: build-and-push-image
