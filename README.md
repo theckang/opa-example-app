@@ -76,8 +76,7 @@ oc -n opa-example-app apply -f ./config/tekton/trigger/app-role.yaml
 
 ### Install the Pipeline
 
-Be sure to replace the `targetPath` for the `go test` `Condition` according to
-your github repo source code. Then run:
+To install the pipeline run:
 
 ```bash
 oc apply -f ./config/tekton/trigger/pipeline.yaml
