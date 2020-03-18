@@ -151,9 +151,8 @@ spec:
   resources:
     - name: source-repo
       type: git
-      targetPath: go/src/github.com/ifont/opa-example-app
   check:
-    image: golang
+    image: registry.access.redhat.com/ubi8/go-toolset
     command: ["go"]
     args: ["test", "./..."]
     workingDir: $(inputs.resources.source-repo.path)
