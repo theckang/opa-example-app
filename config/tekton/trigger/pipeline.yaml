@@ -65,7 +65,7 @@ spec:
         type: git
     params:
       - default: .
-        description: The location of the path to run s2i from.
+        description: The path to the root of the repo.
         name: PATH_CONTEXT
         type: string
       - default: 'true'
