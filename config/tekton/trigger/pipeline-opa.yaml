@@ -100,34 +100,6 @@ spec:
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  name: deploy-locally
-  namespace: opa-example-app-trigger
-spec:
-  inputs:
-    resources:
-      - name: source
-        type: git
-    params:
-      - name: path
-        type: string
-        description: Path to the manifests to apply
-  outputs:
-    resources:
-    - name: event-to-sink
-      type: cloudEvent
-  steps:
-    - name: run-oc
-      image: quay.io/openshift/origin-cli:4.3
-      command: ["oc"]
-      args:
-        - "replace"
-        - "--force"
-        - "-f"
-        - "$(inputs.params.path)"
----
-apiVersion: tekton.dev/v1alpha1
-kind: Task
-metadata:
   name: build-and-push-image
   namespace: opa-example-app-trigger
 spec:
@@ -185,6 +157,34 @@ spec:
   volumes:
     - emptyDir: {}
       name: varlibcontainers
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: deploy-locally
+  namespace: opa-example-app-trigger
+spec:
+  inputs:
+    resources:
+      - name: source
+        type: git
+    params:
+      - name: path
+        type: string
+        description: Path to the manifests to apply
+  outputs:
+    resources:
+    - name: event-to-sink
+      type: cloudEvent
+  steps:
+    - name: run-oc
+      image: quay.io/openshift/origin-cli:4.3
+      command: ["oc"]
+      args:
+        - "replace"
+        - "--force"
+        - "-f"
+        - "$(inputs.params.path)"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Condition
