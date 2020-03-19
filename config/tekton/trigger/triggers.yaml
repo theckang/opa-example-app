@@ -27,7 +27,7 @@ spec:
     - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
       metadata:
-        name: opa-example-app-trigger-pipeline-run-$(uid)
+        name: opa-example-app-trigger-pipeline-$(uid)
         namespace: $(params.namespace)
       spec:
         serviceAccountName: tekton-triggers-admin
