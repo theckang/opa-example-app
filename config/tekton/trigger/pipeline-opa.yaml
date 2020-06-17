@@ -3,8 +3,8 @@
 # - source is pulled from git
 # - deploy manifests via dry-run to test that OPA policy passes before moving on
 # - conditions say go test must pass before moving on
-# - source is built into an image by img
-# - image output is pushed to ECR
+# - source is built into an image by buildah
+# - image output is pushed to container registry
 # - cloudevent emitted
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
