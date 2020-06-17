@@ -79,35 +79,34 @@ metadata:
   name: build-and-push-image
   namespace: opa-example-app-trigger
 spec:
-  inputs:
-    resources:
+  resources:
+    inputs:
       - name: source
         type: git
-    params:
-      - default: .
-        description: The path to the root of the repo.
-        name: PATH_CONTEXT
-        type: string
-      - default: 'true'
-        description: >-
-          Verify the TLS on the registry endpoint (for push/pull to a non-TLS
-          registry)
-        name: TLSVERIFY
-        type: string
-  outputs:
-    resources:
+    outputs:
       - name: image
         type: image
+  params:
+    - default: .
+      description: The path to the root of the repo.
+      name: PATH_CONTEXT
+      type: string
+    - default: 'true'
+      description: >-
+        Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+        registry)
+      name: TLSVERIFY
+      type: string
   steps:
     - name: build
       image: quay.io/buildah/stable
       command:
         - buildah
         - bud
-        - '--tls-verify=$(inputs.params.TLSVERIFY)'
+        - '--tls-verify=$(params.TLSVERIFY)'
         - '--layers'
         - '-f'
-        - $(inputs.params.PATH_CONTEXT)/Dockerfile
+        - $(params.PATH_CONTEXT)/Dockerfile
         - '-t'
         - $(outputs.resources.image.url)
         - .
@@ -122,7 +121,7 @@ spec:
       command:
         - buildah
         - push
-        - '--tls-verify=$(inputs.params.TLSVERIFY)'
+        - '--tls-verify=$(params.TLSVERIFY)'
         - $(outputs.resources.image.url)
         - 'docker://$(outputs.resources.image.url)'
       securityContext:
@@ -140,18 +139,17 @@ metadata:
   name: deploy-locally
   namespace: opa-example-app-trigger
 spec:
-  inputs:
-    resources:
+  resources:
+    inputs:
       - name: source
         type: git
-    params:
-      - name: path
-        type: string
-        description: Path to the manifests to apply
-  outputs:
-    resources:
+    outputs:
     - name: event-to-sink
       type: cloudEvent
+  params:
+    - name: path
+      type: string
+      description: Path to the manifests to apply
   steps:
     - name: run-oc
       image: quay.io/openshift/origin-cli:4.3
@@ -160,7 +158,7 @@ spec:
         - "replace"
         - "--force"
         - "-f"
-        - "$(inputs.params.path)"
+        - "$(params.path)"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Condition
