@@ -75,18 +75,17 @@ metadata:
   name: deploy-locally-dry-run
   namespace: opa-example-app-trigger
 spec:
-  inputs:
-    resources:
+  resources:
+    inputs:
       - name: source
         type: git
-    params:
-      - name: path
-        type: string
-        description: Path to the manifests to apply
-  outputs:
-    resources:
-    - name: event-to-sink
-      type: cloudEvent
+    outputs:
+      - name: event-to-sink
+        type: cloudEvent
+  params:
+    - name: path
+      type: string
+      description: Path to the manifests to apply
   steps:
     - name: run-oc
       image: quay.io/openshift/origin-cli:4.3
@@ -94,143 +93,5 @@ spec:
       args:
         - "apply"
         - "-f"
-        - "$(inputs.params.path)"
+        - "$(params.path)"
         - "--server-dry-run"
----
-apiVersion: tekton.dev/v1alpha1
-kind: Task
-metadata:
-  name: build-and-push-image
-  namespace: opa-example-app-trigger
-spec:
-  inputs:
-    resources:
-      - name: source
-        type: git
-    params:
-      - default: .
-        description: The path to the root of the repo.
-        name: PATH_CONTEXT
-        type: string
-      - default: 'true'
-        description: >-
-          Verify the TLS on the registry endpoint (for push/pull to a non-TLS
-          registry)
-        name: TLSVERIFY
-        type: string
-  outputs:
-    resources:
-      - name: image
-        type: image
-  steps:
-    - name: build
-      image: quay.io/buildah/stable
-      command:
-        - buildah
-        - bud
-        - '--tls-verify=$(inputs.params.TLSVERIFY)'
-        - '--layers'
-        - '-f'
-        - $(inputs.params.PATH_CONTEXT)/Dockerfile
-        - '-t'
-        - $(outputs.resources.image.url)
-        - .
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - mountPath: /var/lib/containers
-          name: varlibcontainers
-      workingDir: /workspace/source
-    - name: push
-      image: quay.io/buildah/stable
-      command:
-        - buildah
-        - push
-        - '--tls-verify=$(inputs.params.TLSVERIFY)'
-        - $(outputs.resources.image.url)
-        - 'docker://$(outputs.resources.image.url)'
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - mountPath: /var/lib/containers
-          name: varlibcontainers
-  volumes:
-    - emptyDir: {}
-      name: varlibcontainers
----
-apiVersion: tekton.dev/v1alpha1
-kind: Task
-metadata:
-  name: deploy-locally
-  namespace: opa-example-app-trigger
-spec:
-  inputs:
-    resources:
-      - name: source
-        type: git
-    params:
-      - name: path
-        type: string
-        description: Path to the manifests to apply
-  outputs:
-    resources:
-    - name: event-to-sink
-      type: cloudEvent
-  steps:
-    - name: run-oc
-      image: quay.io/openshift/origin-cli:4.3
-      command: ["oc"]
-      args:
-        - "replace"
-        - "--force"
-        - "-f"
-        - "$(inputs.params.path)"
----
-apiVersion: tekton.dev/v1alpha1
-kind: Condition
-metadata:
-  name: go-test
-  namespace: opa-example-app-trigger
-spec:
-  resources:
-    - name: source-repo
-      type: git
-  check:
-    image: registry.access.redhat.com/ubi8/go-toolset
-    command: ["go"]
-    args: ["test", "./..."]
-    workingDir: $(inputs.resources.source-repo.path)
-    env:
-      - name: GOPATH
-        value: /workspace/go
----
-# Finally, we need something to receive our cloudevent announcing success!
-# That is this services only purpose
-apiVersion: v1
-kind: Service
-metadata:
-  name: event-display
-  namespace: opa-example-app-trigger
-  labels:
-    app: event-display
-spec:
-  type: ClusterIP
-  ports:
-    - name: listener
-      port: 8080
-      protocol: TCP
-  selector:
-    app: event-display
----
-apiVersion: v1
-kind: Pod
-metadata:
-  name: event-display
-  namespace: opa-example-app-trigger
-  labels:
-    app: event-display
-spec:
-  hostname: event-display
-  containers:
-  - image: gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display
-    name: web
