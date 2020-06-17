@@ -13,11 +13,13 @@ Pipelines by installing the OpenShift Pipelines Operator:
    Operator and install it.
 1. Install OPA Gatekeeper by following these
    [instructions](https://github.com/open-policy-agent/gatekeeper#installation).
-   This tutorial was constructed using OPA Gatekeeper `v3.1.0-beta.7`. Once
-   installed, make sure to add the `anyuid` security context constraint to the
+   This tutorial was constructed using OPA Gatekeeper `v3.1.0-beta.9`. Once
+   installed, OPA Gatekeeper specifies a seccomp profile that on OpenShift
+   requires the pods to run as privileged so you'll need to make sure to add
+   the `privileged` security context constraint to the
    `gatekeeper-admin` service account by running:
    ```bash
-   oc adm policy add-scc-to-user anyuid -z gatekeeper-admin
+   oc adm policy add-scc-to-user privileged -z gatekeeper-admin
    ```
 1. Install [podman](https://podman.io/).
 
