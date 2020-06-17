@@ -10,3 +10,16 @@ spec:
   to:
     kind: Service
     name: opa-example-app
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: opa-example-app-short-host
+  namespace: opa-example-app
+spec:
+  host: opa.ifontlabs.com # Modify to use your FQDN e.g. opa.apps.<clustername>.<domain>. Requires role with `routes/custom-host` resource.
+  port:
+    targetPort: 8080
+  to:
+    kind: Service
+    name: opa-example-app
