@@ -15,7 +15,7 @@ spec:
     - name: CertificateSecretName
       value: ingresssecret
     - name: ExternalDomain
-      value: triggers.ifontlabs.com
+      value: triggers.apps.ocp.ifontlabs.com # Modify to use your FQDN e.g. triggers.apps.<clustername>.<domain>
     - name: Service
       value: el-opa-example-app-trigger-listener
     - name: ServicePort

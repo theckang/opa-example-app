@@ -12,6 +12,8 @@ metadata:
   name: opa-example-app-trigger-pipeline
   namespace: opa-example-app-trigger
 spec:
+  workspaces:
+    - name: ws
   resources:
     - name: source-repo
       type: git
@@ -20,9 +22,34 @@ spec:
     - name: event-to-sink
       type: cloudEvent
   tasks:
+    - name: code-coverage
+      taskRef:
+        name: code-coverage
+      workspaces:
+        - name: local-ws
+          workspace: ws
+    - name: conftest-test
+      taskRef:
+        name: conftest
+      runAfter:
+        - code-coverage
+      params:
+        - name: command
+          value: test
+        - name: CFGNAME
+          value: coverage
+        - name: volumeName
+          value: config-volume
+        - name: input-data
+          value: codecoverage
+      workspaces:
+        - name: local-ws
+          workspace: ws
     - name: apply-opa-policy
       taskRef:
         name: deploy-locally-dry-run
+      runAfter:
+        - conftest-test
       resources:
         inputs:
           - name: source
@@ -72,26 +99,53 @@ spec:
 apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
-  name: deploy-locally-dry-run
+  name: code-coverage
   namespace: opa-example-app-trigger
 spec:
-  resources:
-    inputs:
-      - name: source
-        type: git
-    outputs:
-      - name: event-to-sink
-        type: cloudEvent
-  params:
-    - name: path
-      type: string
-      description: Path to the manifests to apply
+  workspaces:
+    - name: local-ws
   steps:
-    - name: run-oc
-      image: quay.io/openshift/origin-cli:4.3
-      command: ["oc"]
+    - name: code-coverage-json-data
+      image: bash:latest
+      script: |
+        #!/usr/bin/env bash
+        echo -n '{"codecoverage": 0.9577}' | tee $(workspaces.local-ws.path)/codecoverage
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: conftest
+  namespace: opa-example-app-trigger
+spec:
+  params:
+    - name: command
+      type: string
+      description: conftest subcommand to execute
+    - name: CFGNAME
+      type: string
+      description: Name of config map
+    - name: volumeName
+      type: string
+      description: Name of volume
+    - name: input-data
+      type: string
+      description: Filename containing input data
+  workspaces:
+    - name: local-ws
+  steps:
+    - name: conftest
+      image: instrumenta/conftest:v0.17.0
       args:
-        - "apply"
-        - "-f"
-        - "$(params.path)"
-        - "--server-dry-run"
+        - "test"
+        - "-p"
+        - "/policy/coverage.rego"
+        - "-i"
+        - "json"
+        - "$(workspaces.local-ws.path)/codecoverage"
+      volumeMounts:
+        - name: $(params.volumeName)
+          mountPath: /policy
+  volumes:
+    - name: $(params.volumeName)
+      configMap:
+        name: $(params.CFGNAME)

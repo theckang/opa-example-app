@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerTemplate
 metadata:
   name: opa-example-app-trigger-triggertemplate
@@ -14,9 +14,20 @@ spec:
       description: The namespace to create the resources
   resourcetemplates:
     - apiVersion: tekton.dev/v1alpha1
+      kind: PipelineResource
+      metadata:
+        name: source-repo-$(uid)
+      spec:
+        type: git
+        params:
+        - name: revision
+          value: $(params.gitrevision)
+        - name: url
+          value: $(params.gitrepositoryurl)
+    - apiVersion: tekton.dev/v1alpha1
       kind: PipelineRun
       metadata:
-        name: opa-example-app-trigger-pipeline-run-$(uid)
+        name: opa-example-app-trigger-pipeline-$(uid)
         namespace: $(params.namespace)
       spec:
         serviceAccountName: tekton-triggers-admin
@@ -24,27 +35,16 @@ spec:
           name: opa-example-app-trigger-pipeline
         resources:
           - name: source-repo
-            resourceSpec:
-              type: git
-              params:
-              - name: revision
-                value: $(params.gitrevision)
-              - name: url
-                value: $(params.gitrepositoryurl)
+            resourceRef:
+              name: source-repo-$(uid)
           - name: image-source
-            resourceSpec:
-              type: image
-              params:
-                - name: url
-                  value: quay.io/ifont/opa-example-app # docker-repo-location.com/repo:opa-example-app-trigger
+            resourceRef:
+              name: image-source
           - name: event-to-sink
-            resourceSpec:
-              type: cloudEvent
-              params:
-                - name: targetURI
-                  value: http://event-display.opa-example-app-trigger.svc.cluster.local
+            resourceRef:
+              name: event-to-sink
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: TriggerBinding
 metadata:
   name: opa-example-app-trigger-pipelinebinding
@@ -58,7 +58,7 @@ spec:
     - name: gitrepositoryurl
       value: "https://github.com/$(body.repository.full_name)"
 ---
-apiVersion: tekton.dev/v1alpha1
+apiVersion: triggers.tekton.dev/v1alpha1
 kind: EventListener
 metadata:
   name: opa-example-app-trigger-listener

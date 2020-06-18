@@ -25,9 +25,10 @@ rules:
   - patch
   - delete
 - apiGroups:
-  - networking.k8s.io
+  - route.openshift.io
   resources:
-  - ingresses
+  - routes
+  - routes/custom-host
   verbs:
   - get
   - create

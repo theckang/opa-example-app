@@ -2,8 +2,8 @@
 # The opa-example-app-trigger Pipeline will run through several tasks:
 # - source is pulled from git
 # - conditions say go test must pass before moving on
-# - source is built into an image by img
-# - image output is pushed to ECR
+# - source is built into an image by buildah
+# - image output is pushed to container registry
 # - cloudevent emitted
 apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
@@ -28,14 +28,14 @@ spec:
           - name: source-repo
             resource: source-repo
       params:
-        - name: pathToContext
-          value: /workspace/source-repo
+        - name: PATH_CONTEXT
+          value: /workspace/source
       resources:
         inputs:
-          - name: source-repo
+          - name: source
             resource: source-repo
         outputs:
-          - name: builtImage
+          - name: image
             resource: image-source
     - name: deploy-locally
       taskRef:
@@ -51,35 +51,27 @@ spec:
             resource: event-to-sink
       params:
         - name: path
-          value: /workspace/source/config/k8s/ #configure: may change according to your source
+          value: /workspace/source/config/ocp/ #configure: may change according to your source
 ---
 apiVersion: tekton.dev/v1alpha1
-kind: Task
+kind: PipelineResource
 metadata:
-  name: deploy-locally
-  namespace: opa-example-app-trigger
+  name: image-source
 spec:
-  inputs:
-    resources:
-      - name: source
-        type: git
-    params:
-      - name: path
-        type: string
-        description: Path to the manifests to apply
-  outputs:
-    resources:
-    - name: event-to-sink
-      type: cloudEvent
-  steps:
-    - name: run-kubectl
-      image: lachlanevenson/k8s-kubectl
-      command: ["kubectl"]
-      args:
-        - "replace"
-        - "--force"
-        - "-f"
-        - "$(inputs.params.path)"
+  type: image
+  params:
+  - name: url
+    value: quay.io/ifont/opa-example-app # registry/account/repo:tag
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: event-to-sink
+spec:
+  type: cloudEvent
+  params:
+    - name: targetURI
+      value: http://event-display.opa-example-app-trigger.svc.cluster.local
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Task
@@ -87,32 +79,86 @@ metadata:
   name: build-and-push-image
   namespace: opa-example-app-trigger
 spec:
-  inputs:
-    resources:
-      - name: source-repo
+  resources:
+    inputs:
+      - name: source
         type: git
-    params:
-      - name: pathToContext
-        description:
-          The build directory used by Kaniko
-        default: /workspace/source-repo
-  outputs:
-    resources:
-      - name: builtImage
+    outputs:
+      - name: image
         type: image
+  params:
+    - default: .
+      description: The path to the root of the repo.
+      name: PATH_CONTEXT
+      type: string
+    - default: 'true'
+      description: >-
+        Verify the TLS on the registry endpoint (for push/pull to a non-TLS
+        registry)
+      name: TLSVERIFY
+      type: string
   steps:
-    - name: build-and-push
-      image: gcr.io/kaniko-project/executor:v0.15.0
-      # specifying DOCKER_CONFIG is required to allow kaniko to detect docker credential
-      env:
-        - name: "DOCKER_CONFIG"
-          value: "/tekton/home/.docker/"
+    - name: build
+      image: quay.io/buildah/stable
       command:
-        - /kaniko/executor
+        - buildah
+        - bud
+        - '--tls-verify=$(params.TLSVERIFY)'
+        - '--layers'
+        - '-f'
+        - $(params.PATH_CONTEXT)/Dockerfile
+        - '-t'
+        - $(outputs.resources.image.url)
+        - .
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - mountPath: /var/lib/containers
+          name: varlibcontainers
+      workingDir: /workspace/source
+    - name: push
+      image: quay.io/buildah/stable
+      command:
+        - buildah
+        - push
+        - '--tls-verify=$(params.TLSVERIFY)'
+        - $(outputs.resources.image.url)
+        - 'docker://$(outputs.resources.image.url)'
+      securityContext:
+        privileged: true
+      volumeMounts:
+        - mountPath: /var/lib/containers
+          name: varlibcontainers
+  volumes:
+    - emptyDir: {}
+      name: varlibcontainers
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: deploy-locally
+  namespace: opa-example-app-trigger
+spec:
+  resources:
+    inputs:
+      - name: source
+        type: git
+    outputs:
+    - name: event-to-sink
+      type: cloudEvent
+  params:
+    - name: path
+      type: string
+      description: Path to the manifests to apply
+  steps:
+    - name: run-oc
+      image: quay.io/openshift/origin-cli:4.3
+      command: ["oc"]
       args:
-        - --dockerfile=$(inputs.params.pathToContext)/Dockerfile
-        - --destination=$(outputs.resources.builtImage.url)
-        - --context=$(inputs.params.pathToContext)
+        - "replace"
+        - "--force"
+        - "-f"
+        - "$(params.path)"
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: Condition
@@ -123,9 +169,8 @@ spec:
   resources:
     - name: source-repo
       type: git
-      targetPath: go/src/github.com/ifont/opa-example-app
   check:
-    image: golang
+    image: registry.access.redhat.com/ubi8/go-toolset
     command: ["go"]
     args: ["test", "./..."]
     workingDir: $(inputs.resources.source-repo.path)
