@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1alpha1
+kind: TaskRun
+metadata:
+  name: conftest
+spec:
+  workspaces:
+    - name: local-ws
+      emptyDir: {}
+  taskSpec:
+    steps:
+    - name: codecoverage
+      image: bash:latest
+      script: |
+        #!/usr/bin/env bash
+        echo -n '{"codecoverage": 0.9577}' | tee $(workspaces.local-ws.path)/codecoverage
+    - name: conftest
+      image: instrumenta/conftest:v0.17.0
+      command: ["conftest"]
+      args:
+        - "test"
+        - "-p"
+        - "/policy/coverage.rego"
+        - "-i"
+        - "json"
+        - "$(workspaces.local-ws.path)/codecoverage"
+      volumeMounts:
+      - name: config-volume
+        mountPath: /policy
+    workspaces:
+      - name: local-ws
+    volumes:
+    - name: config-volume
+      configMap:
+        name: coverage
