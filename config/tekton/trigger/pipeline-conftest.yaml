@@ -1,0 +1,151 @@
+---
+# The opa-example-app-trigger Pipeline will run through several tasks:
+# - source is pulled from git
+# - deploy manifests via dry-run to test that OPA policy passes before moving on
+# - conditions say go test must pass before moving on
+# - source is built into an image by buildah
+# - image output is pushed to container registry
+# - cloudevent emitted
+apiVersion: tekton.dev/v1alpha1
+kind: Pipeline
+metadata:
+  name: opa-example-app-trigger-pipeline
+  namespace: opa-example-app-trigger
+spec:
+  workspaces:
+    - name: ws
+  resources:
+    - name: source-repo
+      type: git
+    - name: image-source
+      type: image
+    - name: event-to-sink
+      type: cloudEvent
+  tasks:
+    - name: code-coverage
+      taskRef:
+        name: code-coverage
+      workspaces:
+        - name: local-ws
+          workspace: ws
+    - name: conftest-test
+      taskRef:
+        name: conftest
+      runAfter:
+        - code-coverage
+      params:
+        - name: command
+          value: test
+        - name: CFGNAME
+          value: coverage
+        - name: volumeName
+          value: config-volume
+        - name: input-data
+          value: codecoverage
+      workspaces:
+        - name: local-ws
+          workspace: ws
+    - name: apply-opa-policy
+      taskRef:
+        name: deploy-locally-dry-run
+      runAfter:
+        - conftest-test
+      resources:
+        inputs:
+          - name: source
+            resource: source-repo
+        outputs:
+          - name: event-to-sink
+            resource: event-to-sink
+      params:
+        - name: path
+          value: /workspace/source/config/ocp/ #configure: may change according to your source
+    - name: build-and-push-image
+      taskRef:
+        name: build-and-push-image
+      runAfter:
+        - apply-opa-policy
+      conditions:
+      - conditionRef: "go-test"
+        resources:
+          - name: source-repo
+            resource: source-repo
+      params:
+        - name: PATH_CONTEXT
+          value: /workspace/source
+      resources:
+        inputs:
+          - name: source
+            resource: source-repo
+        outputs:
+          - name: image
+            resource: image-source
+    - name: deploy-locally
+      taskRef:
+        name: deploy-locally
+      runAfter:
+        - build-and-push-image
+      resources:
+        inputs:
+          - name: source
+            resource: source-repo
+        outputs:
+          - name: event-to-sink
+            resource: event-to-sink
+      params:
+        - name: path
+          value: /workspace/source/config/ocp/ #configure: may change according to your source
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: code-coverage
+  namespace: opa-example-app-trigger
+spec:
+  workspaces:
+    - name: local-ws
+  steps:
+    - name: code-coverage-json-data
+      image: bash:latest
+      script: |
+        #!/usr/bin/env bash
+        echo -n '{"codecoverage": 0.9577}' | tee $(workspaces.local-ws.path)/codecoverage
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: conftest
+  namespace: opa-example-app-trigger
+spec:
+  params:
+    - name: command
+      type: string
+      description: conftest subcommand to execute
+    - name: CFGNAME
+      type: string
+      description: Name of config map
+    - name: volumeName
+      type: string
+      description: Name of volume
+    - name: input-data
+      type: string
+      description: Filename containing input data
+  workspaces:
+    - name: local-ws
+  steps:
+    - name: conftest
+      image: instrumenta/conftest:v0.17.0
+      args:
+        - "test"
+        - "-p"
+        - "/policy/coverage.rego"
+        - "-i"
+        - "json"
+        - "$(workspaces.local-ws.path)/codecoverage"
+      volumeMounts:
+        - name: $(params.volumeName)
+          mountPath: /policy
+  volumes:
+    - name: $(params.volumeName)
+      configMap:
+        name: $(params.CFGNAME)
