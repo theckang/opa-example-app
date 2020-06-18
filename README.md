@@ -19,7 +19,7 @@ Pipelines by installing the OpenShift Pipelines Operator:
    the `privileged` security context constraint to the
    `gatekeeper-admin` service account by running:
    ```bash
-   oc adm policy add-scc-to-user privileged -z gatekeeper-admin
+   oc -n gatekeeper-system adm policy add-scc-to-user privileged -z gatekeeper-admin
    ```
 1. Install [podman](https://podman.io/).
 
