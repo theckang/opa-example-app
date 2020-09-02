@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: opa-example-app
-          image: quay.io/jakang/opa-example-app:latest
+          image: gcr.io/jakang/opa-example-app:latest
           ports:
             - containerPort: 8080
           imagePullPolicy: Always
